@@ -1,0 +1,529 @@
+<html><head></head><body><div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a href="https://mths.be/punycode">punycode (v2.1.0)</a>
+</h1>
+<h4>A robust Punycode converter that fully complies to RFC 3492 and RFC 5891, and works on nearly all JavaScript platforms.</h4>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.punycode">module punycode</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.punycode.decode">
+            function <span class="apidocSignatureSpan">punycode.</span>decode
+            <span class="apidocSignatureSpan">(input)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.punycode.encode">
+            function <span class="apidocSignatureSpan">punycode.</span>encode
+            <span class="apidocSignatureSpan">(input)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.punycode.toASCII">
+            function <span class="apidocSignatureSpan">punycode.</span>toASCII
+            <span class="apidocSignatureSpan">(input)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.punycode.toUnicode">
+            function <span class="apidocSignatureSpan">punycode.</span>toUnicode
+            <span class="apidocSignatureSpan">(input)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">punycode.</span>ucs2</span>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">string <span class="apidocSignatureSpan">punycode.</span>version</span>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.punycode.ucs2">module punycode.ucs2</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.punycode.ucs2.decode">
+            function <span class="apidocSignatureSpan">punycode.ucs2.</span>decode
+            <span class="apidocSignatureSpan">(string)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.punycode.ucs2.encode">
+            function <span class="apidocSignatureSpan">punycode.ucs2.</span>encode
+            <span class="apidocSignatureSpan">(...array)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.punycode" id="apidoc.module.punycode">module punycode</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.punycode.decode" id="apidoc.element.punycode.decode">
+        function <span class="apidocSignatureSpan">punycode.</span>decode
+        <span class="apidocSignatureSpan">(input)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">decode = function (input) {
+	// Don't use UCS-2.
+	const output = [];
+	const inputLength = input.length;
+	let i = 0;
+	let n = initialN;
+	let bias = initialBias;
+
+	// Handle the basic code points: let `basic` be the number of input code
+	// points before the last delimiter, or `0` if there is none, then copy
+	// the first basic code points to the output.
+
+	let basic = input.lastIndexOf(delimiter);
+	if (basic &lt; 0) {
+		basic = 0;
+	}
+
+	for (let j = 0; j &lt; basic; ++j) {
+		// if it's not a basic code point
+		if (input.charCodeAt(j) &gt;= 0x80) {
+			error('not-basic');
+		}
+		output.push(input.charCodeAt(j));
+	}
+
+	// Main decoding loop: start just after the last delimiter if any basic code
+	// points were copied; start at the beginning otherwise.
+
+	for (let index = basic &gt; 0 ? basic + 1 : 0; index &lt; inputLength; /* no final expression */) {
+
+		// `index` is the index of the next character to be consumed.
+		// Decode a generalized variable-length integer into `delta`,
+		// which gets added to `i`. The overflow checking is easier
+		// if we increase `i` as we go, then subtract off its starting
+		// value at the end to obtain `delta`.
+		let oldi = i;
+		for (let w = 1, k = base; /* no condition */; k += base) {
+
+			if (index &gt;= inputLength) {
+				error('invalid-input');
+			}
+
+			const digit = basicToDigit(input.charCodeAt(index++));
+
+			if (digit &gt;= base || digit &gt; floor((maxInt - i) / w)) {
+				error('overflow');
+			}
+
+			i += digit * w;
+			const t = k &lt;= bias ? tMin : (k &gt;= bias + tMax ? tMax : k - bias);
+
+			if (digit &lt; t) {
+				break;
+			}
+
+			const baseMinusT = base - t;
+			if (w &gt; floor(maxInt / baseMinusT)) {
+				error('overflow');
+			}
+
+			w *= baseMinusT;
+
+		}
+
+		const out = output.length + 1;
+		bias = adapt(i - oldi, out, oldi == 0);
+
+		// `i` was supposed to wrap around from `out` to `0`,
+		// incrementing `n` each time, so we'll fix that now:
+		if (floor(i / out) &gt; maxInt - n) {
+			error('overflow');
+		}
+
+		n += floor(i / out);
+		i %= out;
+
+		// Insert `n` at position `i` of the output.
+		output.splice(i++, 0, n);
+
+	}
+
+	return String.fromCodePoint(...output);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+```js
+const punycode = require('punycode');
+```
+
+## API
+
+### `punycode.<span class="apidocCodeKeywordSpan">decode</span>(string)`
+
+Converts a Punycode string of ASCII symbols to a string of Unicode symbols.
+
+```js
+// decode domain name parts
+punycode.decode('maana-pta'); // 'maÃ±ana'
+punycode.decode('--dqo34k'); // 'â˜ƒ-âŒ˜'
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.punycode.encode" id="apidoc.element.punycode.encode">
+        function <span class="apidocSignatureSpan">punycode.</span>encode
+        <span class="apidocSignatureSpan">(input)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">encode = function (input) {
+	const output = [];
+
+	// Convert the input in UCS-2 to an array of Unicode code points.
+	input = ucs2decode(input);
+
+	// Cache the length.
+	let inputLength = input.length;
+
+	// Initialize the state.
+	let n = initialN;
+	let delta = 0;
+	let bias = initialBias;
+
+	// Handle the basic code points.
+	for (const currentValue of input) {
+		if (currentValue &lt; 0x80) {
+			output.push(stringFromCharCode(currentValue));
+		}
+	}
+
+	let basicLength = output.length;
+	let handledCPCount = basicLength;
+
+	// `handledCPCount` is the number of code points that have been handled;
+	// `basicLength` is the number of basic code points.
+
+	// Finish the basic string with a delimiter unless it's empty.
+	if (basicLength) {
+		output.push(delimiter);
+	}
+
+	// Main encoding loop:
+	while (handledCPCount &lt; inputLength) {
+
+		// All non-basic code points &lt; n have been handled already. Find the next
+		// larger one:
+		let m = maxInt;
+		for (const currentValue of input) {
+			if (currentValue &gt;= n &amp;&amp; currentValue &lt; m) {
+				m = currentValue;
+			}
+		}
+
+		// Increase `delta` enough to advance the decoder's &lt;n,i&gt; state to &lt;m,0&gt;,
+		// but guard against overflow.
+		const handledCPCountPlusOne = handledCPCount + 1;
+		if (m - n &gt; floor((maxInt - delta) / handledCPCountPlusOne)) {
+			error('overflow');
+		}
+
+		delta += (m - n) * handledCPCountPlusOne;
+		n = m;
+
+		for (const currentValue of input) {
+			if (currentValue &lt; n &amp;&amp; ++delta &gt; maxInt) {
+				error('overflow');
+			}
+			if (currentValue == n) {
+				// Represent delta as a generalized variable-length integer.
+				let q = delta;
+				for (let k = base; /* no condition */; k += base) {
+					const t = k &lt;= bias ? tMin : (k &gt;= bias + tMax ? tMax : k - bias);
+					if (q &lt; t) {
+						break;
+					}
+					const qMinusT = q - t;
+					const baseMinusT = base - t;
+					output.push(
+						stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0))
+					);
+					q = floor(qMinusT / baseMinusT);
+				}
+
+				output.push(stringFromCharCode(digitToBasic(q, 0)));
+				bias = adapt(delta, handledCPCountPlusOne, handledCPCount == basicLength);
+				delta = 0;
+				++handledCPCount;
+			}
+		}
+
+		++delta;
+		++n;
+
+	}
+	return output.join('');
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+```js
+// decode domain name parts
+punycode.decode('maana-pta'); // 'maÃ±ana'
+punycode.decode('--dqo34k'); // 'â˜ƒ-âŒ˜'
+```
+
+### `punycode.<span class="apidocCodeKeywordSpan">encode</span>(string)`
+
+Converts a string of Unicode symbols to a Punycode string of ASCII symbols.
+
+```js
+// encode domain name parts
+punycode.encode('maÃ±ana'); // 'maana-pta'
+punycode.encode('â˜ƒ-âŒ˜'); // '--dqo34k'
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.punycode.toASCII" id="apidoc.element.punycode.toASCII">
+        function <span class="apidocSignatureSpan">punycode.</span>toASCII
+        <span class="apidocSignatureSpan">(input)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">toASCII = function (input) {
+	return mapDomain(input, function(string) {
+		return regexNonASCII.test(string)
+			? 'xn--' + encode(string)
+			: string;
+	});
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+// â†’ 'â˜ƒ-âŒ˜.com'
+
+// decode email addresses
+punycode.toUnicode('Ð´Ð¶ÑƒÐ¼Ð»Ð°@xn--p-8sbkgc5ag7bhce.xn--ba-lmcq');
+// â†’ 'Ð´Ð¶ÑƒÐ¼Ð»Ð°@Ð´Ð¶pÑƒÐ¼Ð»Ð°Ñ‚ÐµÑÑ‚.bÑ€Ñ„a'
+```
+
+### `punycode.<span class="apidocCodeKeywordSpan">toASCII</span>(input)`
+
+Converts a lowercased Unicode string representing a domain name or an email address to Punycode. Only the non-ASCII parts of the
+ input will be converted, i.e. it doesnâ€™t matter if you call it with a domain thatâ€™s already in ASCII.
+
+```js
+// encode domain names
+punycode.toASCII('maÃ±ana.com');
+// â†’ 'xn--maana-pta.com'
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.punycode.toUnicode" id="apidoc.element.punycode.toUnicode">
+        function <span class="apidocSignatureSpan">punycode.</span>toUnicode
+        <span class="apidocSignatureSpan">(input)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">toUnicode = function (input) {
+	return mapDomain(input, function(string) {
+		return regexPunycode.test(string)
+			? decode(string.slice(4).toLowerCase())
+			: string;
+	});
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+```js
+// encode domain name parts
+punycode.encode('maÃ±ana'); // 'maana-pta'
+punycode.encode('â˜ƒ-âŒ˜'); // '--dqo34k'
+```
+
+### `punycode.<span class="apidocCodeKeywordSpan">toUnicode</span>(input)`
+
+Converts a Punycode string representing a domain name or an email address to Unicode. Only the Punycoded parts of the input will
+ be converted, i.e. it doesnâ€™t matter if you call it on a string that has already been converted to Unicode.
+
+```js
+// decode domain names
+punycode.toUnicode('xn--maana-pta.com');
+// â†’ 'maÃ±ana.com'
+...</pre></li>
+    </ul>
+
+
+
+
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.punycode.ucs2" id="apidoc.module.punycode.ucs2">module punycode.ucs2</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.punycode.ucs2.decode" id="apidoc.element.punycode.ucs2.decode">
+        function <span class="apidocSignatureSpan">punycode.ucs2.</span>decode
+        <span class="apidocSignatureSpan">(string)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function ucs2decode(string) {
+	const output = [];
+	let counter = 0;
+	const length = string.length;
+	while (counter &lt; length) {
+		const value = string.charCodeAt(counter++);
+		if (value &gt;= 0xD800 &amp;&amp; value &lt;= 0xDBFF &amp;&amp; counter &lt; length) {
+			// It's a high surrogate, and there is a next character.
+			const extra = string.charCodeAt(counter++);
+			if ((extra &amp; 0xFC00) == 0xDC00) { // Low surrogate.
+				output.push(((value &amp; 0x3FF) &lt;&lt; 10) + (extra &amp; 0x3FF) + 0x10000);
+			} else {
+				// It's an unmatched surrogate; only append this code unit, in case the
+				// next code unit is the high surrogate of a surrogate pair.
+				output.push(value);
+				counter--;
+			}
+		} else {
+			output.push(value);
+		}
+	}
+	return output;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+```js
+const punycode = require('punycode');
+```
+
+## API
+
+### `punycode.<span class="apidocCodeKeywordSpan">decode</span>(string)`
+
+Converts a Punycode string of ASCII symbols to a string of Unicode symbols.
+
+```js
+// decode domain name parts
+punycode.decode('maana-pta'); // 'maÃ±ana'
+punycode.decode('--dqo34k'); // 'â˜ƒ-âŒ˜'
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.punycode.ucs2.encode" id="apidoc.element.punycode.ucs2.encode">
+        function <span class="apidocSignatureSpan">punycode.ucs2.</span>encode
+        <span class="apidocSignatureSpan">(...array)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">array =&gt; String.fromCodePoint(...array)</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+```js
+// decode domain name parts
+punycode.decode('maana-pta'); // 'maÃ±ana'
+punycode.decode('--dqo34k'); // 'â˜ƒ-âŒ˜'
+```
+
+### `punycode.<span class="apidocCodeKeywordSpan">encode</span>(string)`
+
+Converts a string of Unicode symbols to a Punycode string of ASCII symbols.
+
+```js
+// encode domain name parts
+punycode.encode('maÃ±ana'); // 'maana-pta'
+punycode.encode('â˜ƒ-âŒ˜'); // '--dqo34k'
+...</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body></html>
